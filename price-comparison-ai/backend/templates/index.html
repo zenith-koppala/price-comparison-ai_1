@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PricePilot — Smart Price Comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">◎</span>
+    <span class="brand-name">Price<strong>Pilot</strong></span>
+  </div>
+  <div class="searchbar">
+    <input id="searchInput" type="text" placeholder="Search products — e.g. headphones, monitor, watch..." />
+  </div>
+  <nav class="categories" id="categoryNav">
+    <button class="cat-btn active" data-cat="All">All</button>
+  </nav>
+</header>
+
+<section class="stats-strip" id="statsStrip">
+  <div class="stat"><span class="stat-num" id="statProducts">–</span><span class="stat-label">products tracked</span></div>
+  <div class="stat"><span class="stat-num">4</span><span class="stat-label">stores compared</span></div>
+  <div class="stat"><span class="stat-num">120</span><span class="stat-label">days of price history</span></div>
+  <div class="stat"><span class="stat-num">ML</span><span class="stat-label">buy-now vs wait engine</span></div>
+</section>
+
+<main>
+  <div class="grid" id="productGrid"></div>
+</main>
+
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<aside class="drawer" id="drawer">
+  <button class="drawer-close" id="drawerClose">&times;</button>
+  <div id="drawerContent"></div>
+</aside>
+
+<template id="cardTemplate">
+  <article class="card" tabindex="0">
+    <div class="card-cat"></div>
+    <h3 class="card-title"></h3>
+    <div class="card-price-row">
+      <span class="card-price"></span>
+      <span class="card-store"></span>
+    </div>
+    <svg class="sparkline" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
+    <div class="card-badge"></div>
+  </article>
+</template>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
