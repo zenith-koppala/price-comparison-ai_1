@@ -210,3 +210,92 @@ main { padding: 28px 32px 60px; }
 .chart-wrap h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); margin-bottom: 8px; }
 
 .empty-state { padding: 60px 20px; text-align: center; color: var(--ink-muted); grid-column: 1 / -1; }
+
+/* ---------- Watchlist ---------- */
+.watchlist-nav-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.watchlist-nav-btn:hover { border-color: #4FD1A5; }
+#watchlistCount { font-weight: 700; color: #4FD1A5; }
+
+.watchlist-sub { font-size: 13px; color: var(--ink-muted); margin: 4px 0 0; }
+
+.btn-secondary {
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-secondary:hover { background: var(--navy-deep); }
+
+.btn-watch {
+  margin-top: 14px;
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--navy);
+  color: var(--navy);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.btn-watch:hover { background: var(--bg); }
+
+.watch-form {
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--bg);
+  border-radius: 10px;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+}
+.watch-form.open { display: flex; }
+.watch-form label { font-size: 12px; font-weight: 600; color: var(--ink-muted); }
+.watch-form input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  font-size: 13px;
+  font-family: inherit;
+}
+.watch-form button {
+  margin-top: 4px;
+  background: var(--buy);
+  color: #fff;
+  border: none;
+  padding: 9px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.watch-item {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.watch-item.hit { background: var(--buy-bg); }
+.watch-item-top { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+.watch-item-name { font-weight: 600; font-size: 14px; }
+.watch-item-remove { background: none; border: none; color: var(--ink-muted); cursor: pointer; font-size: 16px; padding: 0 4px; }
+.watch-item-prices { font-size: 12.5px; color: var(--ink-muted); margin-top: 6px; }
+.watch-item-hit-badge { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 700; color: var(--buy); background: #fff; padding: 3px 8px; border-radius: 999px; }

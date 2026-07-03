@@ -19,8 +19,8 @@ from datetime import datetime, timedelta
 
 RNG = np.random.default_rng(42)
 
-STORES = ["Amazon", "Flipkart", "Croma", "Reliance Digital"]
-STORE_OFFSET = {"Amazon": 0.0, "Flipkart": -0.015, "Croma": 0.03, "Reliance Digital": 0.015}
+STORES = ["Amazon", "Flipkart", "Croma", "Reliance Digital", "Tata Cliq"]
+STORE_OFFSET = {"Amazon": 0.0, "Flipkart": -0.015, "Croma": 0.03, "Reliance Digital": 0.015, "Tata Cliq": -0.008}
 
 CATEGORIES = {
     "Electronics": [
@@ -32,12 +32,25 @@ CATEGORIES = {
         ("Portable SSD 1TB", 6999),
         ("Bluetooth Speaker Mini", 1999),
         ("Gaming Mouse Elite", 2499),
+        ("Webcam 1080p Pro", 2799),
+        ("USB-C Docking Station", 4999),
+        ("Wireless Charger Pad", 1299),
+        ("Smart Ring Fitness Tracker", 6499),
     ],
     "Mobiles": [
         ("Galaxy Nova 12", 34999),
         ("Pixel Lite 9", 27999),
         ("iPhone Aura 14", 69999),
         ("OnePlus Zen 11", 31999),
+        ("Redmi Blaze 8", 16999),
+        ("Motorola Edge Flow", 22999),
+    ],
+    "Laptops": [
+        ("UltraBook Air 14", 54999),
+        ("Gaming Laptop Titan X", 89999),
+        ("ChromeBook Lite 11", 21999),
+        ("Creator Studio Pro 16", 124999),
+        ("Budget Notebook Go", 29999),
     ],
     "Home Appliances": [
         ("Robot Vacuum Cleaner", 15999),
@@ -51,6 +64,15 @@ CATEGORIES = {
         ("Leather Backpack Urban", 1899),
         ("Smart Fitness Band", 1499),
         ("Denim Jacket Classic", 2299),
+        ("Aviator Sunglasses UV400", 1199),
+        ("Analog Chronograph Watch", 3499),
+    ],
+    "Gaming": [
+        ("Console Pro X", 44999),
+        ("Handheld Gaming Console", 19999),
+        ("4K Gaming Monitor 144Hz", 27999),
+        ("Wireless Gaming Headset", 3999),
+        ("Gaming Chair Ergo", 12999),
     ],
 }
 

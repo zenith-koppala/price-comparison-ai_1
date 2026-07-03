@@ -3,6 +3,7 @@ const STORE_COLORS = {
   "Flipkart": "#C8801A",
   "Croma": "#17915F",
   "Reliance Digital": "#8B5CF6",
+  "Tata Cliq": "#D63384",
 };
 
 const grid = document.getElementById("productGrid");
@@ -16,6 +17,7 @@ const drawerClose = document.getElementById("drawerClose");
 
 let activeCategory = "All";
 let chartInstance = null;
+let currentDrawerProductId = null;
 const recCache = {}; // product_id -> recommendation result, fetched lazily for sparkline badges
 
 function currency(n) {
@@ -110,6 +112,7 @@ async function loadProducts() {
 }
 
 async function openDrawer(productId) {
+  currentDrawerProductId = productId;
   const res = await fetch(`/api/products/${productId}`);
   const data = await res.json();
   const recRes = await fetch(`/api/products/${productId}/recommendation?store=${encodeURIComponent(data.cheapest_store)}`);
@@ -139,6 +142,15 @@ async function openDrawer(productId) {
     </div>
 
     <div class="store-list">${storeRows}</div>
+
+    <button class="btn-watch" id="watchToggleBtn">☆ Track this price</button>
+    <div class="watch-form" id="watchForm">
+      <label>Alert me when the price drops to or below</label>
+      <input type="number" id="watchTargetPrice" placeholder="e.g. ${Math.round(data.prices[data.cheapest_store] * 0.9)}" />
+      <label>Email (optional — leave blank to just track it here)</label>
+      <input type="email" id="watchEmail" placeholder="you@example.com" />
+      <button id="watchSubmitBtn">Start tracking</button>
+    </div>
 
     <div class="chart-wrap">
       <h4>60-day price history by store</h4>
@@ -175,14 +187,97 @@ async function openDrawer(productId) {
       },
     },
   });
+
+  document.getElementById("watchToggleBtn").addEventListener("click", () => {
+    document.getElementById("watchForm").classList.toggle("open");
+  });
+  document.getElementById("watchSubmitBtn").addEventListener("click", async () => {
+    const target = parseFloat(document.getElementById("watchTargetPrice").value);
+    const email = document.getElementById("watchEmail").value.trim();
+    if (!target || target <= 0) {
+      alert("Enter a valid target price.");
+      return;
+    }
+    await fetch("/api/watchlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ product_id: currentDrawerProductId, target_price: target, email: email || null }),
+    });
+    const btn = document.getElementById("watchToggleBtn");
+    btn.textContent = "★ Tracking this price";
+    document.getElementById("watchForm").classList.remove("open");
+    refreshWatchlistCount();
+  });
 }
 
 function closeDrawer() {
   drawer.classList.remove("open");
   drawerBackdrop.classList.remove("open");
+  watchlistDrawer.classList.remove("open");
 }
 drawerClose.addEventListener("click", closeDrawer);
 drawerBackdrop.addEventListener("click", closeDrawer);
+
+const watchlistDrawer = document.getElementById("watchlistDrawer");
+const watchlistNavBtn = document.getElementById("watchlistNavBtn");
+const watchlistClose = document.getElementById("watchlistClose");
+const watchlistItemsEl = document.getElementById("watchlistItems");
+const checkAlertsBtn = document.getElementById("checkAlertsBtn");
+
+async function refreshWatchlistCount() {
+  const res = await fetch("/api/watchlist");
+  const items = await res.json();
+  document.getElementById("watchlistCount").textContent = items.length ? `(${items.length})` : "";
+  return items;
+}
+
+async function renderWatchlist() {
+  const items = await refreshWatchlistCount();
+  if (items.length === 0) {
+    watchlistItemsEl.innerHTML = `<div class="empty-state">Nothing tracked yet. Open a product and click “Track this price.”</div>`;
+    return;
+  }
+  watchlistItemsEl.innerHTML = items.map(item => `
+    <div class="watch-item ${item.target_hit ? "hit" : ""}">
+      <div class="watch-item-top">
+        <div>
+          <div class="watch-item-name">${item.name}</div>
+          <div class="watch-item-prices">Current: ${currency(item.current_price)} at ${item.current_store} &nbsp;·&nbsp; Target: ${currency(item.target_price)}</div>
+          ${item.target_hit ? `<span class="watch-item-hit-badge">Target hit \u2713</span>` : ""}
+        </div>
+        <button class="watch-item-remove" data-id="${item.id}" title="Remove">&times;</button>
+      </div>
+    </div>
+  `).join("");
+
+  watchlistItemsEl.querySelectorAll(".watch-item-remove").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      await fetch(`/api/watchlist/${btn.dataset.id}`, { method: "DELETE" });
+      renderWatchlist();
+    });
+  });
+}
+
+watchlistNavBtn.addEventListener("click", () => {
+  closeDrawer();
+  watchlistDrawer.classList.add("open");
+  drawerBackdrop.classList.add("open");
+  renderWatchlist();
+});
+watchlistClose.addEventListener("click", closeDrawer);
+
+checkAlertsBtn.addEventListener("click", async () => {
+  checkAlertsBtn.textContent = "Checking...";
+  const res = await fetch("/api/watchlist/check-alerts", { method: "POST" });
+  const data = await res.json();
+  checkAlertsBtn.textContent = "Check for price drops now";
+  if (data.triggered.length === 0) {
+    alert("No target prices hit yet — still tracking.");
+  } else {
+    alert(`${data.triggered.length} price drop(s) found! Check the list below.`);
+  }
+  renderWatchlist();
+});
 
 let searchTimer;
 searchInput.addEventListener("input", () => {
@@ -191,3 +286,4 @@ searchInput.addEventListener("input", () => {
 });
 
 loadCategories().then(loadProducts);
+refreshWatchlistCount();

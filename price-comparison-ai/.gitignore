@@ -7,3 +7,4 @@ venv/
 data/products.csv
 data/price_history.csv
 ml/model.pkl
+backend/watchlist.db

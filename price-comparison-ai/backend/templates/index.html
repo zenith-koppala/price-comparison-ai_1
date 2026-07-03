@@ -22,11 +22,12 @@
   <nav class="categories" id="categoryNav">
     <button class="cat-btn active" data-cat="All">All</button>
   </nav>
+  <button class="watchlist-nav-btn" id="watchlistNavBtn">☆ Watchlist <span id="watchlistCount"></span></button>
 </header>
 
 <section class="stats-strip" id="statsStrip">
   <div class="stat"><span class="stat-num" id="statProducts">–</span><span class="stat-label">products tracked</span></div>
-  <div class="stat"><span class="stat-num">4</span><span class="stat-label">stores compared</span></div>
+  <div class="stat"><span class="stat-num" id="statStores">5</span><span class="stat-label">stores compared</span></div>
   <div class="stat"><span class="stat-num">120</span><span class="stat-label">days of price history</span></div>
   <div class="stat"><span class="stat-num">ML</span><span class="stat-label">buy-now vs wait engine</span></div>
 </section>
@@ -39,6 +40,16 @@
 <aside class="drawer" id="drawer">
   <button class="drawer-close" id="drawerClose">&times;</button>
   <div id="drawerContent"></div>
+</aside>
+
+<aside class="drawer" id="watchlistDrawer">
+  <button class="drawer-close" id="watchlistClose">&times;</button>
+  <h2>My Watchlist</h2>
+  <p class="watchlist-sub">Products you're tracking. We'll flag it here (and email you, if you added one) when the price hits your target.</p>
+  <div style="margin:14px 0">
+    <button class="btn-secondary" id="checkAlertsBtn">Check for price drops now</button>
+  </div>
+  <div id="watchlistItems"></div>
 </aside>
 
 <template id="cardTemplate">

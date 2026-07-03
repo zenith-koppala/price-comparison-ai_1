@@ -4,6 +4,12 @@ Compares product prices across multiple online stores and uses a machine
 learning model to recommend **Buy Now** or **Wait** based on historical
 pricing patterns.
 
+## Features
+
+- **Price comparison** across 5 simulated stores, 39 products, 6 categories.
+- **AI Buy Now / Wait recommendation** per product, from a RandomForest model trained on 120 days of price history.
+- **Watchlist with price-drop alerts** — track any product at a target price. Stored server-side in SQLite, keyed to an anonymous session cookie (no login required for the demo). Optionally add an email; if `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` env vars are set, a real email is sent when the target is hit — otherwise the alert is logged to the console so the code path is still verifiable without setting up your own mail credentials.
+
 ## Why this project
 
 This started as a resume line ("AI-powered price comparison") and became a
@@ -16,13 +22,14 @@ price history and the model's recommendation for each product.
 ```
 price-comparison-ai/
 ├── data/
-│   └── generate_data.py     # builds products.csv + price_history.csv (120 days, 4 stores)
+│   └── generate_data.py     # builds products.csv + price_history.csv (120 days, 5 stores, 39 products)
 ├── ml/
 │   ├── train_model.py        # feature engineering + RandomForest training
 │   └── model.pkl              # trained model (generated)
 ├── backend/
 │   ├── app.py                 # Flask REST API + page routes
 │   ├── model_utils.py         # loads model, computes live features, returns recommendation
+│   ├── watchlist.py            # SQLite persistence + email alert logic for the watchlist feature
 │   ├── templates/index.html
 │   └── static/{css,js}
 ├── requirements.txt
@@ -84,6 +91,10 @@ reasoning.
 | `GET /api/products?search=&category=` | product list with best price/store |
 | `GET /api/products/<id>` | prices per store + 60-day history |
 | `GET /api/products/<id>/recommendation?store=` | BUY_NOW/WAIT + confidence + reason |
+| `GET /api/watchlist` | current session's tracked products |
+| `POST /api/watchlist` | add `{product_id, target_price, email}` to watchlist |
+| `DELETE /api/watchlist/<id>` | remove a tracked item |
+| `POST /api/watchlist/check-alerts` | scan for price drops, fire alerts, mark as notified |
 
 ## Talking points for interviews
 
