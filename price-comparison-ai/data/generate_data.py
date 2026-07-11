@@ -119,11 +119,20 @@ def main():
     for category, items in CATEGORIES.items():
         for name, base_price in items:
             pid += 1
+            # Ratings skew positive (like real e-commerce platforms), with realistic spread.
+            rating = round(float(np.clip(RNG.normal(4.2, 0.35), 3.0, 5.0)), 1)
+            review_count = int(RNG.integers(38, 4200))
+            # MRP: the "original" list price before typical online discounting, used for discount badges.
+            mrp = round(base_price * RNG.uniform(1.12, 1.45), -1)
+
             products.append({
                 "product_id": pid,
                 "name": name,
                 "category": category,
                 "base_price": base_price,
+                "mrp": mrp,
+                "rating": rating,
+                "review_count": review_count,
             })
 
             for store in STORES:

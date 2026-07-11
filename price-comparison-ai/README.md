@@ -9,6 +9,9 @@ pricing patterns.
 - **Price comparison** across 5 simulated stores, 39 products, 6 categories.
 - **AI Buy Now / Wait recommendation** per product, from a RandomForest model trained on 120 days of price history.
 - **Watchlist with price-drop alerts** — track any product at a target price. Stored server-side in SQLite, keyed to an anonymous session cookie (no login required for the demo). Optionally add an email; if `SMTP_HOST`/`SMTP_USER`/`SMTP_PASS` env vars are set, a real email is sent when the target is hit — otherwise the alert is logged to the console so the code path is still verifiable without setting up your own mail credentials.
+- **Ratings, discounts, and category icon art** — each product carries a synthetic rating/review count and an MRP-based discount badge; every category has an original hand-coded SVG icon (no external image assets, so no licensing concerns).
+- **Side-by-side comparison** — select up to 3 products from the grid and compare prices across every store, ratings, and the AI recommendation in one table.
+- **Sort and filter** — by price, rating, or discount, on top of search and category filtering.
 
 ## Why this project
 
@@ -95,6 +98,7 @@ reasoning.
 | `POST /api/watchlist` | add `{product_id, target_price, email}` to watchlist |
 | `DELETE /api/watchlist/<id>` | remove a tracked item |
 | `POST /api/watchlist/check-alerts` | scan for price drops, fire alerts, mark as notified |
+| `GET /api/products/compare?ids=1001,1002,1003` | side-by-side comparison data for up to 3 products |
 
 ## Talking points for interviews
 

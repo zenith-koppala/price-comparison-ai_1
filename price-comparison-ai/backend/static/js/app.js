@@ -6,6 +6,62 @@ const STORE_COLORS = {
   "Tata Cliq": "#D63384",
 };
 
+// Original, simple line-icon set (no external assets) + a tinted tile color per category.
+const CATEGORY_STYLE = {
+  "Electronics": {
+    bg: "#E8EEF5", fg: "#1F3A5F",
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 13v-1a8 8 0 0 1 16 0v1"/>
+      <rect x="2.5" y="13" width="5" height="7" rx="2"/>
+      <rect x="16.5" y="13" width="5" height="7" rx="2"/>
+    </svg>`,
+  },
+  "Mobiles": {
+    bg: "#E1F3F4", fg: "#0E7C86",
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="6" y="2.5" width="12" height="19" rx="2.5"/>
+      <line x1="10" y1="19" x2="14" y2="19"/>
+    </svg>`,
+  },
+  "Laptops": {
+    bg: "#ECE9F9", fg: "#4C3FA8",
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="4" width="16" height="10.5" rx="1.5"/>
+      <path d="M2 19.5h20l-2-4H4l-2 4Z"/>
+    </svg>`,
+  },
+  "Home Appliances": {
+    bg: "#FBEEE0", fg: "#B15C1E",
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3.5" y="2.5" width="17" height="19" rx="2"/>
+      <circle cx="12" cy="13.5" r="5"/>
+      <circle cx="12" cy="13.5" r="2"/>
+      <line x1="7" y1="5.5" x2="8.6" y2="5.5"/>
+    </svg>`,
+  },
+  "Fashion": {
+    bg: "#FBE7F0", fg: "#B0356B",
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3 L3 6.5 5.5 10 8 8.5 V21 H16 V8.5 L18.5 10 21 6.5 16 3 C16 4.5 14.2 5.5 12 5.5 C9.8 5.5 8 4.5 8 3Z"/>
+    </svg>`,
+  },
+  "Gaming": {
+    bg: "#EFE6FC", fg: "#6D28D9",
+    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6.5 8.5h11a4 4 0 0 1 4 4.4l-.5 3.6a2.3 2.3 0 0 1-4.2 1L15 15.5H9l-1.8 2a2.3 2.3 0 0 1-4.2-1L2.5 12.9a4 4 0 0 1 4-4.4Z"/>
+      <line x1="7" y1="11" x2="7" y2="13.5"/>
+      <line x1="5.7" y1="12.25" x2="8.3" y2="12.25"/>
+      <circle cx="17" cy="11" r="0.8" fill="currentColor" stroke="none"/>
+      <circle cx="15" cy="13" r="0.8" fill="currentColor" stroke="none"/>
+    </svg>`,
+  },
+};
+
+function ratingStars(rating) {
+  const full = Math.round(rating);
+  return "★".repeat(full) + "☆".repeat(5 - full);
+}
+
 const grid = document.getElementById("productGrid");
 const cardTemplate = document.getElementById("cardTemplate");
 const searchInput = document.getElementById("searchInput");
@@ -16,9 +72,18 @@ const drawerContent = document.getElementById("drawerContent");
 const drawerClose = document.getElementById("drawerClose");
 
 let activeCategory = "All";
+let activeSort = "";
 let chartInstance = null;
+let compareChart = null;
 let currentDrawerProductId = null;
+const compareSet = new Set();
 const recCache = {}; // product_id -> recommendation result, fetched lazily for sparkline badges
+
+const sortSelect = document.getElementById("sortSelect");
+sortSelect.addEventListener("change", () => {
+  activeSort = sortSelect.value;
+  loadProducts();
+});
 
 function currency(n) {
   return "₹" + Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 });
@@ -68,7 +133,7 @@ function buildSparkline(svgEl, points) {
 
 async function loadProducts() {
   const search = searchInput.value;
-  const params = new URLSearchParams({ search, category: activeCategory });
+  const params = new URLSearchParams({ search, category: activeCategory, sort: activeSort });
   const res = await fetch(`/api/products?${params.toString()}`);
   const products = await res.json();
 
@@ -83,10 +148,43 @@ async function loadProducts() {
   for (const p of products) {
     const node = cardTemplate.content.cloneNode(true);
     const card = node.querySelector(".card");
+    const style = CATEGORY_STYLE[p.category] || { bg: "#EEE", fg: "#555", svg: "" };
+
+    const tile = node.querySelector(".card-icon-tile");
+    tile.style.background = style.bg;
+    const iconEl = node.querySelector(".card-icon");
+    iconEl.style.color = style.fg;
+    iconEl.innerHTML = style.svg;
+
     node.querySelector(".card-cat").textContent = p.category;
     node.querySelector(".card-title").textContent = p.name;
+    node.querySelector(".card-rating-stars").textContent = ratingStars(p.rating);
+    node.querySelector(".card-rating-num").textContent = `${p.rating.toFixed(1)} (${p.review_count.toLocaleString("en-IN")})`;
     node.querySelector(".card-price").textContent = currency(p.best_price);
+    if (p.mrp && p.mrp > p.best_price) {
+      node.querySelector(".card-mrp").textContent = currency(p.mrp);
+      node.querySelector(".card-discount").textContent = `${Math.round(p.discount_pct)}% off`;
+    }
     node.querySelector(".card-store").textContent = "at " + p.best_store;
+
+    const checkbox = node.querySelector(".card-compare-checkbox");
+    checkbox.checked = compareSet.has(p.product_id);
+    checkbox.addEventListener("click", e => e.stopPropagation());
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        if (compareSet.size >= 3) {
+          checkbox.checked = false;
+          alert("You can compare up to 3 products at a time.");
+          return;
+        }
+        compareSet.add(p.product_id);
+      } else {
+        compareSet.delete(p.product_id);
+      }
+      updateCompareBar();
+    });
+    node.querySelector(".card-compare").addEventListener("click", e => e.stopPropagation());
+
     card.addEventListener("click", () => openDrawer(p.product_id));
     card.addEventListener("keypress", e => { if (e.key === "Enter") openDrawer(p.product_id); });
     grid.appendChild(node);
@@ -287,3 +385,77 @@ searchInput.addEventListener("input", () => {
 
 loadCategories().then(loadProducts);
 refreshWatchlistCount();
+
+// ---------- Compare feature ----------
+const compareBar = document.getElementById("compareBar");
+const compareBarText = document.getElementById("compareBarText");
+const compareBarBtn = document.getElementById("compareBarBtn");
+const compareBarClear = document.getElementById("compareBarClear");
+const compareDrawer = document.getElementById("compareDrawer");
+const compareBackdrop = document.getElementById("compareBackdrop");
+const compareClose = document.getElementById("compareClose");
+const compareContent = document.getElementById("compareContent");
+
+function updateCompareBar() {
+  const n = compareSet.size;
+  compareBarText.textContent = n === 0 ? "0 selected" : `${n} selected — pick up to 3 to compare`;
+  compareBarBtn.disabled = n < 2;
+  compareBar.classList.toggle("visible", n > 0);
+  // keep checkboxes in sync when navigating back to the grid
+  document.querySelectorAll(".card-compare-checkbox").forEach(cb => {
+    // no-op placeholder; sync happens per-render in loadProducts
+  });
+}
+
+compareBarClear.addEventListener("click", () => {
+  compareSet.clear();
+  updateCompareBar();
+  loadProducts();
+});
+
+compareBarBtn.addEventListener("click", async () => {
+  const ids = Array.from(compareSet).join(",");
+  const res = await fetch(`/api/products/compare?ids=${ids}`);
+  const items = await res.json();
+  renderCompare(items);
+  closeDrawer();
+  compareDrawer.classList.add("open");
+  compareBackdrop.classList.add("open");
+});
+
+function renderCompare(items) {
+  const allStores = [...new Set(items.flatMap(i => Object.keys(i.prices)))];
+
+  const rows = allStores.map(store => {
+    const cells = items.map(item => {
+      const price = item.prices[store];
+      const isCheapest = store === item.cheapest_store;
+      return `<td class="${isCheapest ? "compare-cheapest" : ""}">${price ? currency(price) : "—"}${isCheapest ? " ✓" : ""}</td>`;
+    }).join("");
+    return `<tr><th>${store}</th>${cells}</tr>`;
+  }).join("");
+
+  const header = items.map(item => `
+    <th>
+      <div class="compare-col-name">${item.name}</div>
+      <div style="font-size:12px;color:var(--ink-muted)">${ratingStars(item.rating)} ${item.rating.toFixed(1)}</div>
+      <div style="margin-top:4px;font-size:11px;font-weight:700;color:${item.recommendation === "BUY_NOW" ? "var(--buy)" : "var(--wait)"}">
+        ${item.recommendation === "BUY_NOW" ? "BUY NOW" : "WAIT"} (${(item.confidence * 100).toFixed(0)}%)
+      </div>
+    </th>
+  `).join("");
+
+  compareContent.innerHTML = `
+    <table class="compare-table">
+      <thead><tr><th></th>${header}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function closeCompareDrawer() {
+  compareDrawer.classList.remove("open");
+  compareBackdrop.classList.remove("open");
+}
+compareClose.addEventListener("click", closeCompareDrawer);
+compareBackdrop.addEventListener("click", closeCompareDrawer);

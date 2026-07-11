@@ -5,9 +5,10 @@ Flask API + server for the Smart Price Comparison Platform.
 Endpoints
 ---------
 GET  /api/categories
-GET  /api/products?search=&category=
+GET  /api/products?search=&category=&sort=       (sort: price_asc|price_desc|rating|discount)
 GET  /api/products/<product_id>
 GET  /api/products/<product_id>/recommendation?store=<store>   (store optional -> uses cheapest store)
+GET  /api/products/compare?ids=1001,1002,1003
 GET  /api/watchlist
 POST /api/watchlist                 { product_id, target_price, email }
 DELETE /api/watchlist/<item_id>
@@ -76,6 +77,7 @@ def categories():
 def list_products():
     search = request.args.get("search", "").strip().lower()
     category = request.args.get("category", "").strip()
+    sort = request.args.get("sort", "").strip()
 
     df = products_df.copy()
     if search:
@@ -86,9 +88,49 @@ def list_products():
     latest = latest_prices()
     best = best_price_per_product(latest)
     merged = df.merge(best, on="product_id", how="left")
+    merged["discount_pct"] = ((merged["mrp"] - merged["best_price"]) / merged["mrp"] * 100).round(0)
+
+    if sort == "price_asc":
+        merged = merged.sort_values("best_price")
+    elif sort == "price_desc":
+        merged = merged.sort_values("best_price", ascending=False)
+    elif sort == "rating":
+        merged = merged.sort_values("rating", ascending=False)
+    elif sort == "discount":
+        merged = merged.sort_values("discount_pct", ascending=False)
 
     results = merged.to_dict(orient="records")
     return jsonify(results)
+
+
+@app.route("/api/products/compare")
+def compare_products():
+    ids = request.args.get("ids", "")
+    product_ids = [int(x) for x in ids.split(",") if x.strip().isdigit()]
+    if not product_ids:
+        return jsonify({"error": "no product ids given"}), 400
+
+    latest = latest_prices()
+    out = []
+    for pid in product_ids:
+        prod = products_df[products_df["product_id"] == pid]
+        if prod.empty:
+            continue
+        prod = prod.iloc[0].to_dict()
+        prod_prices = latest[latest["product_id"] == pid]
+        prices_by_store = {row["store"]: round(row["price"], 2) for _, row in prod_prices.iterrows()}
+        cheapest_store = min(prices_by_store, key=prices_by_store.get)
+        store_hist = history_df[(history_df["product_id"] == pid) & (history_df["store"] == cheapest_store)].sort_values("date")
+        rec = recommend(store_hist["price"])
+        out.append({
+            **prod,
+            "prices": prices_by_store,
+            "cheapest_store": cheapest_store,
+            "cheapest_price": prices_by_store[cheapest_store],
+            "recommendation": rec["recommendation"],
+            "confidence": rec["confidence"],
+        })
+    return jsonify(out)
 
 
 @app.route("/api/products/<int:product_id>")

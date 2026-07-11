@@ -22,6 +22,13 @@
   <nav class="categories" id="categoryNav">
     <button class="cat-btn active" data-cat="All">All</button>
   </nav>
+  <select class="sort-select" id="sortSelect">
+    <option value="">Sort: Featured</option>
+    <option value="price_asc">Price: Low to High</option>
+    <option value="price_desc">Price: High to Low</option>
+    <option value="rating">Highest Rated</option>
+    <option value="discount">Biggest Discount</option>
+  </select>
   <button class="watchlist-nav-btn" id="watchlistNavBtn">☆ Watchlist <span id="watchlistCount"></span></button>
 </header>
 
@@ -35,6 +42,14 @@
 <main>
   <div class="grid" id="productGrid"></div>
 </main>
+
+<div class="compare-bar" id="compareBar">
+  <span id="compareBarText">0 selected</span>
+  <div class="compare-bar-actions">
+    <button class="btn-secondary" id="compareBarBtn" disabled>Compare</button>
+    <button class="compare-bar-clear" id="compareBarClear">Clear</button>
+  </div>
+</div>
 
 <div class="drawer-backdrop" id="drawerBackdrop"></div>
 <aside class="drawer" id="drawer">
@@ -52,14 +67,34 @@
   <div id="watchlistItems"></div>
 </aside>
 
+<div class="drawer-backdrop" id="compareBackdrop"></div>
+<aside class="drawer compare-drawer" id="compareDrawer">
+  <button class="drawer-close" id="compareClose">&times;</button>
+  <h2>Compare Products</h2>
+  <div id="compareContent"></div>
+</aside>
+
 <template id="cardTemplate">
   <article class="card" tabindex="0">
+    <label class="card-compare">
+      <input type="checkbox" class="card-compare-checkbox" />
+      <span>Compare</span>
+    </label>
+    <div class="card-icon-tile">
+      <div class="card-icon"></div>
+    </div>
     <div class="card-cat"></div>
     <h3 class="card-title"></h3>
+    <div class="card-rating">
+      <span class="card-rating-stars"></span>
+      <span class="card-rating-num"></span>
+    </div>
     <div class="card-price-row">
       <span class="card-price"></span>
-      <span class="card-store"></span>
+      <span class="card-mrp"></span>
+      <span class="card-discount"></span>
     </div>
+    <div class="card-store"></div>
     <svg class="sparkline" viewBox="0 0 100 28" preserveAspectRatio="none"></svg>
     <div class="card-badge"></div>
   </article>
