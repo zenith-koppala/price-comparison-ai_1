@@ -62,6 +62,80 @@ function ratingStars(rating) {
   return "★".repeat(full) + "☆".repeat(5 - full);
 }
 
+// Signature hero illustration: a price tag with an upward-trending line and a
+// small "target hit" dot, built from the same original line-icon style as the
+// category icons — this is the one deliberately bolder visual on the page.
+function renderHeroArt() {
+  document.getElementById("heroArt").innerHTML = `
+    <svg viewBox="0 0 220 170" fill="none">
+      <circle cx="110" cy="85" r="80" fill="rgba(79,209,165,0.08)"/>
+      <path d="M40 120 C70 60, 150 100, 185 45" stroke="#4FD1A5" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="185" cy="45" r="6" fill="#4FD1A5"/>
+      <g transform="translate(60,55) rotate(-18)">
+        <path d="M0 18 L0 4 Q0 0 4 0 L34 0 Q38 0 40 3 L54 22 Q56 25 54 28 L34 52 Q31 55 27 53 L3 34 Q0 31 0 27 Z" fill="#1F3A5F"/>
+        <circle cx="14" cy="14" r="4.5" fill="#12203A"/>
+      </g>
+    </svg>
+  `;
+}
+
+async function renderQuickCats() {
+  const res = await fetch("/api/categories");
+  const cats = await res.json();
+  const nav = document.getElementById("quickCats");
+  nav.innerHTML = "";
+
+  const allBtn = document.createElement("button");
+  allBtn.className = "quick-cat-btn active";
+  allBtn.innerHTML = `<span class="quick-cat-icon" style="background:#EFEFEF"><svg viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span> All`;
+  allBtn.addEventListener("click", () => selectCategory("All", allBtn));
+  nav.appendChild(allBtn);
+
+  cats.forEach(cat => {
+    const style = CATEGORY_STYLE[cat] || { bg: "#EEE", fg: "#555", svg: "" };
+    const btn = document.createElement("button");
+    btn.className = "quick-cat-btn";
+    btn.innerHTML = `<span class="quick-cat-icon" style="background:${style.bg};color:${style.fg}">${style.svg}</span> ${cat}`;
+    btn.addEventListener("click", () => selectCategory(cat, btn));
+    nav.appendChild(btn);
+  });
+}
+
+function selectCategory(cat, btnEl) {
+  activeCategory = cat;
+  document.querySelectorAll(".quick-cat-btn").forEach(b => b.classList.remove("active"));
+  btnEl.classList.add("active");
+  document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+  const topBtn = categoryNav.querySelector(`[data-cat="${cat}"]`);
+  if (topBtn) topBtn.classList.add("active");
+  loadProducts();
+  document.querySelector("main").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function renderDeals() {
+  const res = await fetch("/api/products?search=&category=All&sort=discount");
+  const products = (await res.json()).slice(0, 8);
+  const row = document.getElementById("dealsRow");
+  row.innerHTML = products.map(p => {
+    const style = CATEGORY_STYLE[p.category] || { bg: "#EEE", fg: "#555", svg: "" };
+    return `
+      <div class="deal-card" data-id="${p.product_id}">
+        <div class="deal-card-tile" style="background:${style.bg};color:${style.fg}">${style.svg}</div>
+        <div class="deal-card-title">${p.name}</div>
+        <span class="deal-card-off">${Math.round(p.discount_pct)}% off</span>
+        <div><span class="deal-card-price">${currency(p.best_price)}</span><span class="deal-card-mrp">${currency(p.mrp)}</span></div>
+      </div>
+    `;
+  }).join("");
+  row.querySelectorAll(".deal-card").forEach(el => {
+    el.addEventListener("click", () => openDrawer(parseInt(el.dataset.id, 10)));
+  });
+}
+
+document.getElementById("heroCta").addEventListener("click", () => {
+  document.querySelector(".deals-section").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
 const grid = document.getElementById("productGrid");
 const cardTemplate = document.getElementById("cardTemplate");
 const searchInput = document.getElementById("searchInput");
@@ -138,7 +212,8 @@ async function loadProducts() {
   const products = await res.json();
 
   grid.innerHTML = "";
-  document.getElementById("statProducts").textContent = products.length;
+  document.getElementById("catalogCount").textContent = `${products.length} product${products.length === 1 ? "" : "s"}`;
+  document.getElementById("catalogHeading").textContent = activeCategory === "All" ? "All products" : activeCategory;
 
   if (products.length === 0) {
     grid.innerHTML = `<div class="empty-state">No products match “${search}”. Try another search.</div>`;
@@ -155,6 +230,15 @@ async function loadProducts() {
     const iconEl = node.querySelector(".card-icon");
     iconEl.style.color = style.fg;
     iconEl.innerHTML = style.svg;
+
+    const ribbon = node.querySelector(".card-ribbon");
+    if (p.review_count > 3000) {
+      ribbon.textContent = "Best seller";
+      ribbon.classList.add("show", "bestseller");
+    } else if (p.rating >= 4.7) {
+      ribbon.textContent = "Top rated";
+      ribbon.classList.add("show", "toprated");
+    }
 
     node.querySelector(".card-cat").textContent = p.category;
     node.querySelector(".card-title").textContent = p.name;
@@ -227,9 +311,22 @@ async function openDrawer(productId) {
       </div>
     `).join("");
 
+  const style = CATEGORY_STYLE[data.product.category] || { bg: "#EEE", fg: "#555", svg: "" };
+
   drawerContent.innerHTML = `
+    <div class="buybox-hero" style="background:${style.bg}">
+      <div class="card-icon" style="color:${style.fg}">${style.svg}</div>
+    </div>
     <div class="drawer-cat">${data.product.category}</div>
     <h2>${data.product.name}</h2>
+    <div class="card-rating" style="margin-bottom:4px">
+      <span class="card-rating-stars">${ratingStars(data.product.rating)}</span>
+      <span class="card-rating-num">${data.product.rating.toFixed(1)} (${data.product.review_count.toLocaleString("en-IN")} ratings)</span>
+    </div>
+    <div class="trust-row">
+      <span class="trust-item"><span class="trust-dot"></span>Verified across ${Object.keys(data.prices).length} stores</span>
+      <span class="trust-item"><span class="trust-dot"></span>120-day price history</span>
+    </div>
 
     <div class="rec-panel ${isBuy ? "buy" : "wait"}">
       <span class="rec-dot"></span>
@@ -385,6 +482,9 @@ searchInput.addEventListener("input", () => {
 
 loadCategories().then(loadProducts);
 refreshWatchlistCount();
+renderHeroArt();
+renderQuickCats();
+renderDeals();
 
 // ---------- Compare feature ----------
 const compareBar = document.getElementById("compareBar");

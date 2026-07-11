@@ -32,16 +32,44 @@
   <button class="watchlist-nav-btn" id="watchlistNavBtn">☆ Watchlist <span id="watchlistCount"></span></button>
 </header>
 
-<section class="stats-strip" id="statsStrip">
-  <div class="stat"><span class="stat-num" id="statProducts">–</span><span class="stat-label">products tracked</span></div>
-  <div class="stat"><span class="stat-num" id="statStores">5</span><span class="stat-label">stores compared</span></div>
-  <div class="stat"><span class="stat-num">120</span><span class="stat-label">days of price history</span></div>
-  <div class="stat"><span class="stat-num">ML</span><span class="stat-label">buy-now vs wait engine</span></div>
+<section class="hero">
+  <div class="hero-copy">
+    <span class="hero-eyebrow">AI price intelligence</span>
+    <h1 class="hero-title">Know the right moment<br/>to buy. Every time.</h1>
+    <p class="hero-sub">PricePilot compares prices across 5 stores and uses a trained model to tell you whether to buy now or wait for a drop — backed by 120 days of real price history.</p>
+    <div class="hero-actions">
+      <button class="hero-cta" id="heroCta">Browse today's deals</button>
+      <span class="hero-trust">39 products · 6 categories · updated pricing model</span>
+    </div>
+  </div>
+  <div class="hero-art" id="heroArt"></div>
+</section>
+
+<nav class="quick-cats" id="quickCats"></nav>
+
+<section class="deals-section">
+  <div class="section-head">
+    <h2>Today's best deals</h2>
+    <span class="section-sub">Biggest markdowns vs. list price, right now</span>
+  </div>
+  <div class="deals-row" id="dealsRow"></div>
 </section>
 
 <main>
+  <div class="section-head">
+    <h2 id="catalogHeading">All products</h2>
+    <span class="section-sub" id="catalogCount"></span>
+  </div>
   <div class="grid" id="productGrid"></div>
 </main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span class="brand-name" style="color:#fff">Price<strong>Pilot</strong></span>
+    <p>A student-built portfolio project. Prices and stores are simulated for demonstration; the ML recommendation engine and comparison logic are fully real.</p>
+    <a href="https://github.com/zenith-koppala/price-comparison-ai_1" target="_blank" rel="noopener">View source on GitHub</a>
+  </div>
+</footer>
 
 <div class="compare-bar" id="compareBar">
   <span id="compareBarText">0 selected</span>
@@ -80,6 +108,7 @@
       <input type="checkbox" class="card-compare-checkbox" />
       <span>Compare</span>
     </label>
+    <div class="card-ribbon"></div>
     <div class="card-icon-tile">
       <div class="card-icon"></div>
     </div>
